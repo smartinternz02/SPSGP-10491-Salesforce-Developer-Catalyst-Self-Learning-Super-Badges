@@ -1,0 +1,83 @@
+public with sharing class WarehouseCalloutService implements Queueable {
+
+    private static final String MBA_WAREHOUSE_URL = 'https://th-superbadge-apex.herokuapp.com/equipment';
+
+    @future(callout=true)
+
+    public static void runWarehouseEquipmentSync(){
+
+        System.debug('go into runWarehouseEquipmentSync');
+
+        Http mba_http = new Http();
+
+        HttpRequest mba_request = new HttpRequest();
+
+        mba_request.setEndpoint(MBA_WAREHOUSE_URL);
+
+        mba_request.setMethod('GET');
+
+        HttpResponse mba_response = mba_http.send(mba_request);
+
+
+        List<Product2> mba_list = new List<Product2>();
+
+        System.debug(mba_response.getStatusCode());
+
+        if (mba_response.getStatusCode() == 200){
+
+            List<Object> mba_jsonResponse = (List<Object>)JSON.deserializeUntyped(mba_response.getBody());
+
+            System.debug(mba_response.getBody());
+
+
+            for (Object jR : mba_jsonResponse){
+
+                Map<String,Object> mba_mapJson = (Map<String,Object>)jR;
+
+                Product2 mba_product2 = new Product2();
+
+
+                mba_product2.Replacement_Part__c = (Boolean) mba_mapJson.get('replacement');
+
+                mba_product2.Cost__c = (Integer) mba_mapJson.get('cost');
+
+                mba_product2.Current_Inventory__c = (Double) mba_mapJson.get('quantity');
+
+                mba_product2.Lifespan_Months__c = (Integer) mba_mapJson.get('lifespan');
+
+                mba_product2.Maintenance_Cycle__c = (Integer) mba_mapJson.get('maintenanceperiod');              
+
+                mba_product2.Warehouse_SKU__c = (String) mba_mapJson.get('sku');
+
+                mba_product2.Name = (String) mba_mapJson.get('name');
+
+                mba_product2.ProductCode = (String) mba_mapJson.get('_id');
+
+                mba_list.add(mba_product2);
+
+            }
+
+            if (mba_list.size() > 0){
+
+                upsert mba_list;
+
+                System.debug('Your equipment was synced with the warehouse one');
+
+            }
+
+        }
+
+    }
+ 
+
+    public static void execute (QueueableContext context)
+    {
+
+        System.debug('start runWarehouseEquipmentSync');
+
+        runWarehouseEquipmentSync();
+
+        System.debug('end runWarehouseEquipmentSync');
+
+    }
+}
