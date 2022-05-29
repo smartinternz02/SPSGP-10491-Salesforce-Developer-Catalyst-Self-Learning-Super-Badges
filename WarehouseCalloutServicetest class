@@ -1,0 +1,29 @@
+@IsTest
+private class WarehouseCalloutServiceTest {
+	@isTest
+    static void testWarehouseCallout() {
+
+        test.startTest();
+
+        test.setMock(HttpCalloutMock.class, new WarehouseCalloutServiceMock());
+
+        WarehouseCalloutService.execute(null);
+
+        test.stopTest();
+
+        List<Product2> mbaproductlist = new List<Product2>();
+
+        mbaproductlist = [SELECT ProductCode FROM Product2];
+
+                System.assertEquals(3, mbaproductlist.size());
+
+                System.assertEquals('55d66226726b611100aaf741',
+                                    mbaproductlist.get(0).ProductCode);
+
+                System.assertEquals('55d66226726b611100aaf742',
+                                    mbaproductlist.get(1).ProductCode);
+
+                System.assertEquals('55d66226726b611100aaf743',
+                                    mbaproductlist.get(2).ProductCode);
+    }
+}
