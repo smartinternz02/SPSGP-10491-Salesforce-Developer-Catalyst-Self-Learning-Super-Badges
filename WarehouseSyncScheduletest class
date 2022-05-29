@@ -1,0 +1,19 @@
+@isTest
+public with sharing class WarehouseSyncScheduleTest {
+    @isTest static void test() {
+
+        String schedule_mba_Time = '00 00 00 * * ? *';
+
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, new WarehouseCalloutServiceMock());
+
+        String job_mba_Id = System.schedule('Warehouse Time to Schedule to test', schedule_mba_Time, new WarehouseSyncSchedule());
+
+        CronTrigger mba = [SELECT State FROM CronTrigger WHERE Id =: job_mba_Id];
+
+        System.assertEquals('WAITING', String.valueOf(mba.State), 'JobId does not match');
+
+        Test.stopTest();
+    }
+}
